@@ -5,7 +5,7 @@ import Queue
 import sys
 
 class Ftp:
-    
+    #lala
     def __init__(self, host,  account,  password):
         self.host = host
         self.account = account
