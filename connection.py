@@ -43,32 +43,59 @@ def doesLocalFolderExists(path):
 def walkThroughServer(connect,  path):
 #acces au repertoire
 #FONCTIONNE COMME UN SERVEUR LINUX 
-
-    connect.cwd(path)
+    print "---CONTENU DU REPERTOIRE---"
     print connect.pwd()
-    rep = connect.dir() # on recupere le listing
+    connect.retrlines('LIST')
+
     
 def synchroFTP(connect,  localPath, serverPath):
+    connect.cwd(sys.argv[5])
     for root, dirs, files in os.walk(localPath):  
         for fichier in files:
-            
+           
             #envoiFichierSurFtp(connect,  filePath)
             filePath = root + "\\"+ fichier
-            print filePath
+            #print filePath
+            #print dirs
+            
+            tempDir = dirs
+            serverPath = filePath.split(localPath +"\\")
+            print serverPath[-1]
+            
+#            try:  
+#                connect.cwd(serverPath[-1])
+#                connect.cwd("..")	 
+#                   
+#            except: 
+#                print " creation du repertoire" + serverPath[-1]
+#                connect.mkd(serverPath[-1])
+#                connect.cwd(serverPath[-1])
+                    
+
+                
+            # Traitement si c'est un fichier 
+            connect.storbinary('STOR '+fichier, open(filePath, 'rb'))
+
+
+#            serverPath = filePath.split(localPath +"\\")
+#            print serverPath[-1]
+
            
     
     
 if __name__ == '__main__':
 
-    if os.path.isdir(sys.argv[5]) : 
-        print "le repertoire : " + sys.argv[5] + " existe"
+    if os.path.isdir(sys.argv[4]) : 
+        print "le repertoire : " + sys.argv[4] + " existe"
         maConnection = Ftp(sys.argv[1],  sys.argv[2], sys.argv[3] )
-        print walkTroughLocalDirectory(sys.argv[4])
+        
+        
         connect = maConnection.connect()
     else :
-        print "le repertoire : " + sys.argv[5] + " n\'existe pas, operation annulee"
+        print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
 
-    synchroFTP(connect, sys.argv[4],   "python")
+    synchroFTP(connect, sys.argv[4],   sys.argv[5])
+    print walkThroughServer(connect,sys.argv[5] )
    # maConnection.sendFile("C:\Users\ISEN\Desktop\pompozob.txt")
    # tableau =  connect.retrlines('LIST')
     #connect.dir('LIST')
