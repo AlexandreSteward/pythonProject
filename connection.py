@@ -43,9 +43,32 @@ def doesLocalFolderExists(path):
 def walkThroughServer(connect,  path):
 #acces au repertoire
 #FONCTIONNE COMME UN SERVEUR LINUX 
-    print "---CONTENU DU REPERTOIRE---"
+    print "---CONTENU DU REPERTOIRE FTP---"
     print connect.pwd()
     connect.retrlines('LIST')
+
+def doesFileExistsOnServer(file, fileName):
+    try:   
+        ## Traitement si existe en fichier
+        connect.size(fileName) 
+    except: 
+        ## Traitement si existe en repertoire ou n'existe pas
+        try:  
+            ## Traitement si existe en repertoire
+            connect.cwd(fileName) 
+            connect.cwd("..")
+        except:
+            ## Traitement si n'existe pas
+            connect.storbinary('STOR '+file, open(fileName, 'rb'))
+
+def doesDirectoryExistsOnServer(dir):
+        try:  
+            ## Traitement si existe en repertoire
+            connect.cwd(dir) 
+            connect.cwd("..")
+        except:
+            ## Traitement si n'existe pas
+            connect.mkd(dir)
 
     
 def synchroFTP(connect,  localPath, serverPath):
@@ -54,7 +77,7 @@ def synchroFTP(connect,  localPath, serverPath):
         for fichier in files:
            
             #envoiFichierSurFtp(connect,  filePath)
-            filePath = root + "\\"+ fichier
+            filePath = root + "\\"+ fichier #probleme : ecris tous les fichiers dans le dossier root
             #print filePath
             #print dirs
             
@@ -62,6 +85,10 @@ def synchroFTP(connect,  localPath, serverPath):
             serverPath = filePath.split(localPath +"\\")
             print serverPath[-1]
             
+            doesFileExistsOnServer(fichier, filePath)
+            
+        for dir in dirs:
+            doesDirectoryExistsOnServer(dir)
 #            try:  
 #                connect.cwd(serverPath[-1])
 #                connect.cwd("..")	 
@@ -74,7 +101,8 @@ def synchroFTP(connect,  localPath, serverPath):
 
                 
             # Traitement si c'est un fichier 
-            connect.storbinary('STOR '+fichier, open(filePath, 'rb'))
+            
+            
 
 
 #            serverPath = filePath.split(localPath +"\\")
@@ -91,11 +119,12 @@ if __name__ == '__main__':
         
         
         connect = maConnection.connect()
+        synchroFTP(connect, sys.argv[4],  sys.argv[5])
+        walkThroughServer(connect,sys.argv[5] )
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
 
-    synchroFTP(connect, sys.argv[4],   sys.argv[5])
-    print walkThroughServer(connect,sys.argv[5] )
+    
    # maConnection.sendFile("C:\Users\ISEN\Desktop\pompozob.txt")
    # tableau =  connect.retrlines('LIST')
     #connect.dir('LIST')
