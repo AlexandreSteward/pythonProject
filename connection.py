@@ -50,11 +50,18 @@ def doesFileExistsOnServer(file, fileName):
 def doesDirectoryExistsOnServer(dir):
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd(dir) 
-            connect.cwd("..")
+            connect.cwd("/" + dir) 
+            print "acces au repertoire FTP " + dir
+            print connect.pwd()
+            
         except:
-            ## Traitement si n'existe pas
-            connect.mkd(dir)
+            ## Traitement si n'existe 
+            print "/" + dir.replace("\\" + dir.split("\\")[-1],  "")
+            connect.cwd(("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/"))
+            print connect.pwd()
+           
+            print "creation du dossier " + dir.split("\\")[-1]
+            connect.mkd(dir.split("\\")[-1])
 
     
 def synchroFTP(connect,  localPath, serverPath):
@@ -68,7 +75,7 @@ def synchroFTP(connect,  localPath, serverPath):
             #print dirs
             
             tempDir = dirs
-            serverPath = filePath.split(localPath +"\\")
+            serverPath = filePath.split(localPath +"/")
             print serverPath[-1]
             
             doesFileExistsOnServer(fichier, filePath)
@@ -80,12 +87,16 @@ def synchroFTP(connect,  localPath, serverPath):
 def createTree(path):
 
 #  doesFileExistsOnServer(connect.cwd(sys.argv[5])[0])  
-    print "------DOSSIER " + path + "---" 
+    print os.listdir(path)
     for file in os.listdir(path) :
         tempDir = path + "\\" + file
+
         if os.path.isdir(tempDir) :
-            print tempDir
-            print  file+ " est un repertoire"
+            print "\n ------DOSSIER " + path + "---" 
+
+            serverPath = (sys.argv[5] +tempDir.split(sys.argv[5])[-1]).replace("/", "\\")
+            print "serverPath = "  + serverPath
+            doesDirectoryExistsOnServer(serverPath)
             createTree(tempDir)
 #        else :
 #            print  file+ "n'est pas un repertoire"
@@ -120,7 +131,7 @@ def createTree(path):
     
 if __name__ == '__main__':
 
-    createTree(sys.argv[4])
+
     
     if os.path.isdir(sys.argv[4]) : 
         print "le repertoire : " + sys.argv[4] + " existe"
@@ -128,7 +139,10 @@ if __name__ == '__main__':
         
         
         connect = maConnection.connect()
-       
+        connect.cwd("python")
+        print connect.retrlines('LIST')
+        
+        createTree(sys.argv[4])
 #        synchroFTP(connect, sys.argv[4],  sys.argv[5])
 #        walkThroughServer(connect,sys.argv[5] )
     else :
