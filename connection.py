@@ -21,20 +21,6 @@ class Ftp:
         connect.storbinary('STOR ' + "name",  file)
         file.close()
         
-        
-        
-        #La fonction os.walk(path) cree un generateur de triplets (root, dirs, files) dans l'arborescence de path. 
-#Un triplet est genere par repertoire visite. root represente le chemin d'acces du repertoire
-#visite. dirs est la liste des sous-repertoires du repertoire root et files est la liste des fichiers du
-#repertoire root. 
-def walkTroughLocalDirectory(path):  
-    size = 0  
-    print "nombre de fichier total dans le dossier =  %s" % len(os.listdir(path))
-    for root, dirs, files in os.walk(path):  
-        for fic in files:  
-            size += os.path.getsize(os.path.join(root, fic)) 
-    return size 
-  
 
 def doesLocalFolderExists(path):
     current_dir = os.path.dirname(path)
@@ -78,7 +64,7 @@ def synchroFTP(connect,  localPath, serverPath):
            
             #envoiFichierSurFtp(connect,  filePath)
             filePath = root + "\\"+ fichier #probleme : ecris tous les fichiers dans le dossier root
-            #print filePath
+            print filePath
             #print dirs
             
             tempDir = dirs
@@ -89,6 +75,27 @@ def synchroFTP(connect,  localPath, serverPath):
             
         for dir in dirs:
             doesDirectoryExistsOnServer(dir)
+           
+           
+def createTree(path):
+
+#  doesFileExistsOnServer(connect.cwd(sys.argv[5])[0])  
+    print "------DOSSIER " + path + "---" 
+    for file in os.listdir(path) :
+        tempDir = path + "\\" + file
+        if os.path.isdir(tempDir) :
+            print tempDir
+            print  file+ " est un repertoire"
+            createTree(tempDir)
+#        else :
+#            print  file+ "n'est pas un repertoire"
+#  # os.listdir(sys.argv[4])
+#    for root, dirs, files in os.walk(sys.argv[4]):
+#         for dir in dirs:
+#            print dir
+#            doesDirectoryExistsOnServer(dir)
+            
+            
 #            try:  
 #                connect.cwd(serverPath[-1])
 #                connect.cwd("..")	 
@@ -113,14 +120,17 @@ def synchroFTP(connect,  localPath, serverPath):
     
 if __name__ == '__main__':
 
+    createTree(sys.argv[4])
+    
     if os.path.isdir(sys.argv[4]) : 
         print "le repertoire : " + sys.argv[4] + " existe"
         maConnection = Ftp(sys.argv[1],  sys.argv[2], sys.argv[3] )
         
         
         connect = maConnection.connect()
-        synchroFTP(connect, sys.argv[4],  sys.argv[5])
-        walkThroughServer(connect,sys.argv[5] )
+       
+#        synchroFTP(connect, sys.argv[4],  sys.argv[5])
+#        walkThroughServer(connect,sys.argv[5] )
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
 
