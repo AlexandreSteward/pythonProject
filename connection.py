@@ -33,24 +33,27 @@ def walkThroughServer(connect,  path):
     print connect.pwd()
     connect.retrlines('LIST')
 
-def doesFileExistsOnServer(file, fileName):
+def doesFileExistsOnServer(file, serverPath,  localPath):
     try:   
         ## Traitement si existe en fichier
-        connect.size(fileName) 
+        connect.size("/" + serverPath.replace("\\", "/")) 
+       
     except: 
         ## Traitement si existe en repertoire ou n'existe pas
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd(fileName) 
+            connect.cwd(serverPath) 
             connect.cwd("..")
         except:
             ## Traitement si n'existe pas
-            connect.storbinary('STOR '+file, open(fileName, 'rb'))
+            connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
+            connect.storbinary('STOR '+file, open( localPath , 'rb'))
+            print "le fichier " + localPath + "a ete cree"
 
 def doesDirectoryExistsOnServer(dir):
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd("/" + dir) 
+            connect.cwd("/" + dir.replace("\\", "/")) 
             print "acces au repertoire FTP " + dir
             print connect.pwd()
             
@@ -60,8 +63,9 @@ def doesDirectoryExistsOnServer(dir):
             connect.cwd(("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/"))
             print connect.pwd()
            
-            print "creation du dossier " + dir.split("\\")[-1]
+        
             connect.mkd(dir.split("\\")[-1])
+            print "creation du dossier " + dir.split("\\")[-1]
 
     
 def synchroFTP(connect,  localPath, serverPath):
@@ -98,7 +102,9 @@ def createTree(path):
             print "serverPath = "  + serverPath
             doesDirectoryExistsOnServer(serverPath)
             createTree(tempDir)
-#        else :
+        else :
+            serverPath ="/"+ (sys.argv[5] +tempDir.split(sys.argv[5])[-1]).replace("/", "\\")
+            doesFileExistsOnServer(file, serverPath.replace("\\", "/"),  tempDir)
 #            print  file+ "n'est pas un repertoire"
 #  # os.listdir(sys.argv[4])
 #    for root, dirs, files in os.walk(sys.argv[4]):
@@ -130,8 +136,6 @@ def createTree(path):
     
     
 if __name__ == '__main__':
-
-
     
     if os.path.isdir(sys.argv[4]) : 
         print "le repertoire : " + sys.argv[4] + " existe"
