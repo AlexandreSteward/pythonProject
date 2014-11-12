@@ -36,19 +36,22 @@ def walkThroughServer(connect,  path):
 def doesFileExistsOnServer(file, serverPath,  localPath):
     try:   
         ## Traitement si existe en fichier
-        connect.size("/" + serverPath.replace("\\", "/")) 
-       
+        if connect.size("/" + serverPath.replace("\\", "/")) != os.path.getsize(localPath) :
+            connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
+            connect.storbinary('STOR '+file, open( localPath , 'rb'))
+            print "le fichier " + localPath + " a ete mis a jour  "
+            print "old file size " + str(connect.size("/" + serverPath.replace("\\", "/"))) +" new file size " +str(os.path.getsize(localPath)) 
     except: 
         ## Traitement si existe en repertoire ou n'existe pas
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd(serverPath) 
+            connect.cwd(serverPath)
             connect.cwd("..")
         except:
             ## Traitement si n'existe pas
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
-            print "le fichier " + localPath + "a ete cree"
+            print "le fichier " + localPath + " a ete cree"
 
 def doesDirectoryExistsOnServer(dir):
         try:  
@@ -94,6 +97,7 @@ def createTree(path):
     print os.listdir(path)
     for file in os.listdir(path) :
         tempDir = path + "\\" + file
+        print tempDir
 
         if os.path.isdir(tempDir) :
             print "\n ------DOSSIER " + path + "---" 
@@ -104,36 +108,16 @@ def createTree(path):
             createTree(tempDir)
         else :
             serverPath ="/"+ (sys.argv[5] +tempDir.split(sys.argv[5])[-1]).replace("/", "\\")
+            print serverPath
             doesFileExistsOnServer(file, serverPath.replace("\\", "/"),  tempDir)
-#            print  file+ "n'est pas un repertoire"
-#  # os.listdir(sys.argv[4])
-#    for root, dirs, files in os.walk(sys.argv[4]):
-#         for dir in dirs:
-#            print dir
-#            doesDirectoryExistsOnServer(dir)
-            
-            
-#            try:  
-#                connect.cwd(serverPath[-1])
-#                connect.cwd("..")	 
-#                   
-#            except: 
-#                print " creation du repertoire" + serverPath[-1]
-#                connect.mkd(serverPath[-1])
-#                connect.cwd(serverPath[-1])
-                    
-
-                
-            # Traitement si c'est un fichier 
-            
-            
 
 
-#            serverPath = filePath.split(localPath +"\\")
-#            print serverPath[-1]
+#def getServerFullPath(path):
+#    return  "/"+ (sys.argv[5] +path.split(sys.argv[5])[-1]).replace("\\", "/")
+#           
 
-           
-    
+def getLocalFullPath(path,  file):
+    return path + "\\" + file
     
 if __name__ == '__main__':
     
