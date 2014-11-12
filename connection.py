@@ -66,7 +66,7 @@ def doesFileExistsOnServer(file, serverPath,  localPath):
         except:
             ## Traitement si le fichier n'existe pas
             #print  "acces au dossier " + serverPath.replace("/" + serverPath.split("/")[-1],  "/")
-            print "acces au dossier" + serverPath
+           # print "acces au dossier" + serverPath
             connect.cwd( serverPath) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             print "le fichier " + localPath + " a ete cree"
@@ -75,8 +75,8 @@ def doesDirectoryExistsOnServer(dir):
         try:  
             ## Traitement si existe en repertoire
             connect.cwd(dir) 
-            print "acces au repertoire FTP " + dir
-            print connect.pwd()
+            #print "acces au repertoire FTP " + dir
+           # print connect.pwd()
             
         except:
             ## Traitement si n'existe pas
