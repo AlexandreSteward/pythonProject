@@ -4,6 +4,7 @@ import time
 import Queue
 import sys
 import os
+from datetime import datetime
 
 class Ftp:
     #lala
@@ -33,14 +34,29 @@ def walkThroughServer(connect,  path):
     print connect.pwd()
     connect.retrlines('LIST')
 
+def getLastTimeFileOnServer(serverPath):
+    return connect.sendcmd("MDTM "+"/" + serverPath.replace("\\", "/")).split(" ")[-1]
+
+def getLastTimeFileOnLocal(localPath):
+    return datetime.utcfromtimestamp(os.path.getmtime(localPath)).isoformat(" ").replace("-", "").replace(":",  "").replace(" ",  "").split(".")[0]
+
 def doesFileExistsOnServer(file, serverPath,  localPath):
     try:   
         ## Traitement si existe en fichier
+        print "old file size " + str(connect.size("/" + serverPath.replace("\\", "/"))) +" new file size " +str(os.path.getsize(localPath))
         if connect.size("/" + serverPath.replace("\\", "/")) != os.path.getsize(localPath) :
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
-            print "le fichier " + localPath + " a ete mis a jour  "
-            print "old file size " + str(connect.size("/" + serverPath.replace("\\", "/"))) +" new file size " +str(os.path.getsize(localPath)) 
+            print "le fichier " + localPath + " a ete mis a jour (taille du fichier)"
+            
+            
+        print "date serveur = "+ getLastTimeFileOnServer(serverPath)
+        print "derniere modification locale : " + getLastTimeFileOnLocal(localPath)
+        if getLastTimeFileOnLocal(localPath) > getLastTimeFileOnServer(serverPath) :
+            connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
+            connect.storbinary('STOR '+file, open( localPath , 'rb'))
+            print "le fichier " + localPath + " a ete mis a jour (date derniere modification)"
+           
     except: 
         ## Traitement si existe en repertoire ou n'existe pas
         try:  
@@ -61,7 +77,7 @@ def doesDirectoryExistsOnServer(dir):
             print connect.pwd()
             
         except:
-            ## Traitement si n'existe 
+            ## Traitement si n'existe pas
             print "/" + dir.replace("\\" + dir.split("\\")[-1],  "")
             connect.cwd(("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/"))
             print "cest quoi ce truc : " + ("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/")
