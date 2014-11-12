@@ -61,31 +61,32 @@ def doesFileExistsOnServer(file, serverPath,  localPath):
         ## Traitement si existe en repertoire ou n'existe pas
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd(serverPath)
+            connect.cwd(serverPath+"/"+file)
             connect.cwd("..")
         except:
-            ## Traitement si n'existe pas
-            connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
+            ## Traitement si le fichier n'existe pas
+            #print  "acces au dossier " + serverPath.replace("/" + serverPath.split("/")[-1],  "/")
+            print "acces au dossier" + serverPath
+            connect.cwd( serverPath) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             print "le fichier " + localPath + " a ete cree"
 
 def doesDirectoryExistsOnServer(dir):
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd("/" + dir.replace("\\", "/")) 
+            connect.cwd(dir) 
             print "acces au repertoire FTP " + dir
             print connect.pwd()
             
         except:
             ## Traitement si n'existe pas
-            print "/" + dir.replace("\\" + dir.split("\\")[-1],  "")
-            connect.cwd(("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/"))
-            print "cest quoi ce truc : " + ("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/")
+
+            #on accede au dossier parent
+            connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))
             print connect.pwd()
-           
-        
-            connect.mkd(dir.split("\\")[-1])
-            print "creation du dossier " + dir.split("\\")[-1]
+            #on cree le nouveau dossier
+            connect.mkd(dir.split("/")[-1])
+            print "creation du dossier " + dir.split("/")[-1]
 
     
 def synchroFTP(connect,  localPath, serverPath):
@@ -116,13 +117,14 @@ def createTree(path):
         tempDir = getLocalFullPath(path,  file)
 
         if os.path.isdir(tempDir) :
-            print "\n ------DOSSIER " + path + "---" 
+            print "\n ------DOSSIER " + path + "------" 
 
             serverPath = getServerFullPath(path)
             doesDirectoryExistsOnServer(serverPath)
             createTree(tempDir)
         else :
             serverPath =getServerFullPath(path)
+            doesDirectoryExistsOnServer(serverPath)
             doesFileExistsOnServer(file, serverPath,  tempDir)
 
 
