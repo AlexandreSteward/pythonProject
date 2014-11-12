@@ -64,6 +64,7 @@ def doesDirectoryExistsOnServer(dir):
             ## Traitement si n'existe 
             print "/" + dir.replace("\\" + dir.split("\\")[-1],  "")
             connect.cwd(("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/"))
+            print "cest quoi ce truc : " + ("/" + dir.replace("\\" + dir.split("\\")[-1],  "")).replace("\\", "/")
             print connect.pwd()
            
         
@@ -96,25 +97,22 @@ def createTree(path):
 #  doesFileExistsOnServer(connect.cwd(sys.argv[5])[0])  
     print os.listdir(path)
     for file in os.listdir(path) :
-        tempDir = path + "\\" + file
-        print tempDir
+        tempDir = getLocalFullPath(path,  file)
 
         if os.path.isdir(tempDir) :
             print "\n ------DOSSIER " + path + "---" 
 
-            serverPath = (sys.argv[5] +tempDir.split(sys.argv[5])[-1]).replace("/", "\\")
-            print "serverPath = "  + serverPath
+            serverPath = getServerFullPath(path)
             doesDirectoryExistsOnServer(serverPath)
             createTree(tempDir)
         else :
-            serverPath ="/"+ (sys.argv[5] +tempDir.split(sys.argv[5])[-1]).replace("/", "\\")
-            print serverPath
-            doesFileExistsOnServer(file, serverPath.replace("\\", "/"),  tempDir)
+            serverPath =getServerFullPath(path)
+            doesFileExistsOnServer(file, serverPath,  tempDir)
 
 
-#def getServerFullPath(path):
-#    return  "/"+ (sys.argv[5] +path.split(sys.argv[5])[-1]).replace("\\", "/")
-#           
+def getServerFullPath(path):
+    return  "/"+ (sys.argv[5] +path.split(sys.argv[5])[-1]).replace("\\", "/")
+           
 
 def getLocalFullPath(path,  file):
     return path + "\\" + file
