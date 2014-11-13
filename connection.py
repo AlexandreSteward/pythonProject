@@ -43,7 +43,7 @@ def getLastTimeFileOnLocal(localPath):
 def doesFileExistsOnServer(file, serverPath,  localPath):
     try:   
         ## Traitement si existe en fichier
-        print "old file size " + str(connect.size("/" + serverPath.replace("\\", "/"))) +" new file size " +str(os.path.getsize(localPath))
+        #print "old file size " + str(connect.size("/" + serverPath.replace("\\", "/"))) +" new file size " +str(os.path.getsize(localPath))
         if connect.size("/" + serverPath.replace("\\", "/")) != os.path.getsize(localPath) :
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
@@ -61,13 +61,13 @@ def doesFileExistsOnServer(file, serverPath,  localPath):
         ## Traitement si existe en repertoire ou n'existe pas
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd(serverPath+"/"+file)
+            connect.cwd(serverPath)
             connect.cwd("..")
         except:
             ## Traitement si le fichier n'existe pas
             #print  "acces au dossier " + serverPath.replace("/" + serverPath.split("/")[-1],  "/")
            # print "acces au dossier" + serverPath
-            connect.cwd( serverPath) 
+            connect.cwd( serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             print "le fichier " + localPath + " a ete cree"
 
@@ -119,18 +119,18 @@ def createTree(path):
         if os.path.isdir(tempDir) :
             print "\n ------DOSSIER " + path + "------" 
 
-            serverPath = getServerFullPath(path)
-            doesDirectoryExistsOnServer(serverPath)
+            serverDirPath =getServerPath(path)
+            doesDirectoryExistsOnServer(serverDirPath)
             createTree(tempDir)
         else :
-            serverPath =getServerFullPath(path)
-            doesDirectoryExistsOnServer(serverPath)
-            doesFileExistsOnServer(file, serverPath,  tempDir)
+            serverDirPath =getServerPath(path)
+            serverFilePath = getServerPath(tempDir)
+            doesDirectoryExistsOnServer(serverDirPath)
+            doesFileExistsOnServer(file, serverFilePath,  tempDir)
 
 
-def getServerFullPath(path):
+def getServerPath(path):
     return  "/"+ (sys.argv[5] +path.split(sys.argv[5])[-1]).replace("\\", "/")
-           
 
 def getLocalFullPath(path,  file):
     return path + "\\" + file
