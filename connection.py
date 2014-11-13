@@ -15,24 +15,6 @@ class Ftp:
 
     def connect(self):
         return ftplib.FTP(self.host,  self.account,  self.password)
-    
-    def sendFile(self, addresse):
-        file = open(addresse, 'rb')
-        name = "renamed file"
-        connect.storbinary('STOR ' + "name",  file)
-        file.close()
-        
-
-def doesLocalFolderExists(path):
-    current_dir = os.path.dirname(path)
-    print current_dir
-    
-def walkThroughServer(connect,  path):
-#acces au repertoire
-#FONCTIONNE COMME UN SERVEUR LINUX 
-    print "---CONTENU DU REPERTOIRE FTP---"
-    print connect.pwd()
-    connect.retrlines('LIST')
 
 def getLastTimeFileOnServer(serverPath):
     return connect.sendcmd("MDTM "+"/" + serverPath.replace("\\", "/")).split(" ")[-1]
@@ -49,9 +31,6 @@ def doesFileExistsOnServer(file, serverPath,  localPath):
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             print "le fichier " + localPath + " a ete mis a jour (taille du fichier)"
             
-            
-        print "date serveur = "+ getLastTimeFileOnServer(serverPath)
-        print "derniere modification locale : " + getLastTimeFileOnLocal(localPath)
         if getLastTimeFileOnLocal(localPath) > getLastTimeFileOnServer(serverPath) :
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
@@ -88,25 +67,6 @@ def doesDirectoryExistsOnServer(dir):
             connect.mkd(dir.split("/")[-1])
             print "creation du dossier " + dir.split("/")[-1]
 
-    
-def synchroFTP(connect,  localPath, serverPath):
-    connect.cwd(sys.argv[5])
-    for root, dirs, files in os.walk(localPath):  
-        for fichier in files:
-           
-            #envoiFichierSurFtp(connect,  filePath)
-            filePath = root + "\\"+ fichier #probleme : ecris tous les fichiers dans le dossier root
-            print filePath
-            #print dirs
-            
-            tempDir = dirs
-            serverPath = filePath.split(localPath +"/")
-            print serverPath[-1]
-            
-            doesFileExistsOnServer(fichier, filePath)
-            
-        for dir in dirs:
-            doesDirectoryExistsOnServer(dir)
            
            
 def createTree(path):
@@ -147,24 +107,11 @@ if __name__ == '__main__':
         print connect.retrlines('LIST')
         
         createTree(sys.argv[4])
-#        synchroFTP(connect, sys.argv[4],  sys.argv[5])
-#        walkThroughServer(connect,sys.argv[5] )
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
 
-    
-   # maConnection.sendFile("C:\Users\ISEN\Desktop\pompozob.txt")
-   # tableau =  connect.retrlines('LIST')
-    #connect.dir('LIST')
-    #print tableau[(0, 0)]
-    
 
 
- #Define a function for the thread
-def envoiFichierSurFtp( connection,  filePath):
-   connection.connect()
-   connection.sendFile(filePath)
-   print "file " + filePath + " sent"
 
 ## Create two threads as follows
 #try:
