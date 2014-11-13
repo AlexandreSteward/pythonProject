@@ -119,7 +119,7 @@ def createTree(path):
         if os.path.isdir(tempDir) :
             print "\n ------DOSSIER " + path + "------" 
 
-            serverDirPath =getServerPath(path)
+            serverDirPath =getServerPath(tempDir)
             doesDirectoryExistsOnServer(serverDirPath)
             createTree(tempDir)
         else :
