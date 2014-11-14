@@ -21,12 +21,14 @@ def getLastTimeFileOnServer(serverPath):
 
 def getLastTimeFileOnLocal(localPath):
     return datetime.utcfromtimestamp(os.path.getmtime(localPath)).isoformat(" ").replace("-", "").replace(":",  "").replace(" ",  "").split(".")[0]
+    
+def getFileServerPermission(serverPath):
+    return 0
 
 def doesFileExistsOnServer(file, serverPath,  localPath):
     try:   
         ## Traitement si existe en fichier
-        #print "old file size " + str(connect.size("/" + serverPath.replace("\\", "/"))) +" new file size " +str(os.path.getsize(localPath))
-        if connect.size("/" + serverPath.replace("\\", "/")) != os.path.getsize(localPath) :
+        if connect.size(serverPath) != os.path.getsize(localPath) :
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             print "le fichier " + localPath + " a ete mis a jour (taille du fichier)"
