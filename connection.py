@@ -92,9 +92,66 @@ def createTree(path):
 def getServerPath(path):
     return  "/"+ (sys.argv[5] +path.split(sys.argv[5])[-1]).replace("\\", "/")
 
+def concatPath(currentPath,  file):
+    return "/" + currentPath + "/" + file
+
 def getLocalFullPath(path,  file):
     return path + "\\" + file
     
+def checkForDeletedThings(currentLocalFolder,  currentServerPath):
+
+    files = []
+    content = connect.retrlines("NLST",files.append)
+#    print connect.nlst();
+        
+
+    for file in files :
+        if file != ".." and file != "." :
+            try:  
+            ## Traitement si existe en repertoire
+                connect.cwd(file)
+                checkForDeletedThings(setLocalPathToChild(currentLocalFolder,  file), setServerPathToChild(currentServerPath,  file)  )
+                if os.path.isdir(currentLocalFolder+"\\"+file) :
+                    print currentLocalFolder+"\\"+ file + " est present localement"
+                else :
+                    #print"deleting" +  currentPath + "/" + file
+                    print "suppression du dossier " + file
+                    connect.rmd(file)
+                    print "dossier " + file + " supprime"
+                    #deleteFolderContent(file)
+                
+            except:
+                if os.path.isfile(currentLocalFolder+"\\"+file)== False :
+                    connect.delete(file)
+                    print "fichier " + file + " supprime"
+                ## Traitement si n'existe pas
+            #on accede au dossier parent
+            # connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))
+            
+    connect.cwd("..")
+            
+
+def setServerPathToChild(currentServerPath,  child):
+    return currentServerPath + "/" + child
+
+def setServerPathToFather(currentServerPath):
+    return currentPath.rstrip("/" + currentPath.split("/")[-1])
+
+def setLocalPathToFather(currentPath):
+    return currentPath.rstrip("\\" + currentPath.split("\\")[-1])
+    
+def setLocalPathToChild(currentPath,  child):
+    return currentPath +"\\" + child
+
+
+    
+def deleteFile(fileName):
+    element = raw_input(fileName) # vous indiquez dans la console le fichier, ex. : fichier.py
+    delete = connect.delete(element) ## cest la fonction en elle-meme
+    
+
+
+
 if __name__ == '__main__':
     
     if os.path.isdir(sys.argv[4]) : 
@@ -103,12 +160,13 @@ if __name__ == '__main__':
         
         
         connect = maConnection.connect()
-        connect.cwd("python")
-        print connect.retrlines('LIST')
-        
-        createTree(sys.argv[4])
+       # print connect.retrlines('LIST')
+        connect.cwd(sys.argv[5])
+        #createTree(sys.argv[4])
+        checkForDeletedThings(sys.argv[4],  "/"+sys.argv[5])
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
+
 
 
 
