@@ -4,6 +4,7 @@ import time
 import Queue
 import sys
 import os
+from datetime import datetime
 
 class Ftp:
     #lala
@@ -14,113 +15,146 @@ class Ftp:
 
     def connect(self):
         return ftplib.FTP(self.host,  self.account,  self.password)
-    
-    def sendFile(self, addresse):
-        file = open(addresse, 'rb')
-        name = "renamed file"
-        connect.storbinary('STOR ' + "name",  file)
-        file.close()
-        
 
-def doesLocalFolderExists(path):
-    current_dir = os.path.dirname(path)
-    print current_dir
-    
-def walkThroughServer(connect,  path):
-#acces au repertoire
-#FONCTIONNE COMME UN SERVEUR LINUX 
-    print "---CONTENU DU REPERTOIRE FTP---"
-    print connect.pwd()
-    connect.retrlines('LIST')
+def getLastTimeFileOnServer(serverPath):
+    return connect.sendcmd("MDTM "+"/" + serverPath.replace("\\", "/")).split(" ")[-1]
 
-def doesFileExistsOnServer(file, fileName):
+def getLastTimeFileOnLocal(localPath):
+    return datetime.utcfromtimestamp(os.path.getmtime(localPath)).isoformat(" ").replace("-", "").replace(":",  "").replace(" ",  "").split(".")[0]
+    
+def getFileServerPermission(serverPath):
+    return 0
+
+def doesFileExistsOnServer(file, serverPath,  localPath):
     try:   
         ## Traitement si existe en fichier
-        connect.size(fileName) 
+        if connect.size(serverPath) != os.path.getsize(localPath) :
+            connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
+            connect.storbinary('STOR '+file, open( localPath , 'rb'))
+            print "le fichier " + localPath + " a ete mis a jour (taille du fichier)"
+            
+        if getLastTimeFileOnLocal(localPath) > getLastTimeFileOnServer(serverPath) :
+            connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
+            connect.storbinary('STOR '+file, open( localPath , 'rb'))
+            print "le fichier " + localPath + " a ete mis a jour (date derniere modification)"
+           
     except: 
         ## Traitement si existe en repertoire ou n'existe pas
         try:  
             ## Traitement si existe en repertoire
-            connect.cwd(fileName) 
+            connect.cwd(serverPath)
             connect.cwd("..")
         except:
-            ## Traitement si n'existe pas
-            connect.storbinary('STOR '+file, open(fileName, 'rb'))
+            ## Traitement si le fichier n'existe pas
+            #print  "acces au dossier " + serverPath.replace("/" + serverPath.split("/")[-1],  "/")
+           # print "acces au dossier" + serverPath
+            connect.cwd( serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
+            connect.storbinary('STOR '+file, open( localPath , 'rb'))
+            print "le fichier " + localPath + " a ete cree"
 
 def doesDirectoryExistsOnServer(dir):
         try:  
             ## Traitement si existe en repertoire
             connect.cwd(dir) 
-            connect.cwd("..")
+            #print "acces au repertoire FTP " + dir
+           # print connect.pwd()
+            
         except:
             ## Traitement si n'existe pas
-            connect.mkd(dir)
 
-    
-def synchroFTP(connect,  localPath, serverPath):
-    connect.cwd(sys.argv[5])
-    for root, dirs, files in os.walk(localPath):  
-        for fichier in files:
-           
-            #envoiFichierSurFtp(connect,  filePath)
-            filePath = root + "\\"+ fichier #probleme : ecris tous les fichiers dans le dossier root
-            print filePath
-            #print dirs
-            
-            tempDir = dirs
-            serverPath = filePath.split(localPath +"\\")
-            print serverPath[-1]
-            
-            doesFileExistsOnServer(fichier, filePath)
-            
-        for dir in dirs:
-            doesDirectoryExistsOnServer(dir)
+            #on accede au dossier parent
+            connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))
+            print connect.pwd()
+            #on cree le nouveau dossier
+            connect.mkd(dir.split("/")[-1])
+            print "creation du dossier " + dir.split("/")[-1]
+
            
            
 def createTree(path):
 
 #  doesFileExistsOnServer(connect.cwd(sys.argv[5])[0])  
-    print "------DOSSIER " + path + "---" 
+    print os.listdir(path)
     for file in os.listdir(path) :
-        tempDir = path + "\\" + file
+        tempDir = getLocalFullPath(path,  file)
+
         if os.path.isdir(tempDir) :
-            print tempDir
-            print  file+ " est un repertoire"
+            print "\n ------DOSSIER " + path + "------" 
+
+            serverDirPath =getServerPath(tempDir)
+            doesDirectoryExistsOnServer(serverDirPath)
             createTree(tempDir)
-#        else :
-#            print  file+ "n'est pas un repertoire"
-#  # os.listdir(sys.argv[4])
-#    for root, dirs, files in os.walk(sys.argv[4]):
-#         for dir in dirs:
-#            print dir
-#            doesDirectoryExistsOnServer(dir)
-            
-            
-#            try:  
-#                connect.cwd(serverPath[-1])
-#                connect.cwd("..")	 
-#                   
-#            except: 
-#                print " creation du repertoire" + serverPath[-1]
-#                connect.mkd(serverPath[-1])
-#                connect.cwd(serverPath[-1])
-                    
+        else :
+            serverDirPath =getServerPath(path)
+            serverFilePath = getServerPath(tempDir)
+            doesDirectoryExistsOnServer(serverDirPath)
+            doesFileExistsOnServer(file, serverFilePath,  tempDir)
 
+
+def getServerPath(path):
+    return  "/"+ (sys.argv[5] +path.split(sys.argv[5])[-1]).replace("\\", "/")
+
+def concatPath(currentPath,  file):
+    return "/" + currentPath + "/" + file
+
+def getLocalFullPath(path,  file):
+    return path + "\\" + file
+    
+def checkForDeletedThings(currentLocalFolder,  currentServerPath):
+
+    files = []
+    content = connect.retrlines("NLST",files.append)
+#    print connect.nlst();
+        
+
+    for file in files :
+        if file != ".." and file != "." :
+            try:  
+            ## Traitement si existe en repertoire
+                connect.cwd(file)
+                checkForDeletedThings(setLocalPathToChild(currentLocalFolder,  file), setServerPathToChild(currentServerPath,  file)  )
+                if os.path.isdir(currentLocalFolder+"\\"+file) :
+                    print currentLocalFolder+"\\"+ file + " est present localement"
+                else :
+                    #print"deleting" +  currentPath + "/" + file
+                    print "suppression du dossier " + file
+                    connect.rmd(file)
+                    print "dossier " + file + " supprime"
+                    #deleteFolderContent(file)
                 
-            # Traitement si c'est un fichier 
+            except:
+                if os.path.isfile(currentLocalFolder+"\\"+file)== False :
+                    connect.delete(file)
+                    print "fichier " + file + " supprime"
+                ## Traitement si n'existe pas
+            #on accede au dossier parent
+            # connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))
             
+    connect.cwd("..")
             
 
+def setServerPathToChild(currentServerPath,  child):
+    return currentServerPath + "/" + child
 
-#            serverPath = filePath.split(localPath +"\\")
-#            print serverPath[-1]
+def setServerPathToFather(currentServerPath):
+    return currentPath.rstrip("/" + currentPath.split("/")[-1])
 
-           
+def setLocalPathToFather(currentPath):
+    return currentPath.rstrip("\\" + currentPath.split("\\")[-1])
     
+def setLocalPathToChild(currentPath,  child):
+    return currentPath +"\\" + child
+
+
     
+def deleteFile(fileName):
+    element = raw_input(fileName) # vous indiquez dans la console le fichier, ex. : fichier.py
+    delete = connect.delete(element) ## cest la fonction en elle-meme
+    
+
+
+
 if __name__ == '__main__':
-
-    createTree(sys.argv[4])
     
     if os.path.isdir(sys.argv[4]) : 
         print "le repertoire : " + sys.argv[4] + " existe"
@@ -128,25 +162,18 @@ if __name__ == '__main__':
         
         
         connect = maConnection.connect()
-       
-#        synchroFTP(connect, sys.argv[4],  sys.argv[5])
-#        walkThroughServer(connect,sys.argv[5] )
+       # print connect.retrlines('LIST')
+        connect.cwd(sys.argv[5])
+        createTree(sys.argv[4])
+        connect.cwd("/" + sys.argv[5])
+        print "\n --------VERIFICATION DE LA SUPPRESSION DE FICHIERS--------"
+        checkForDeletedThings(sys.argv[4],  "/"+sys.argv[5])
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
 
-    
-   # maConnection.sendFile("C:\Users\ISEN\Desktop\pompozob.txt")
-   # tableau =  connect.retrlines('LIST')
-    #connect.dir('LIST')
-    #print tableau[(0, 0)]
-    
 
 
- #Define a function for the thread
-def envoiFichierSurFtp( connection,  filePath):
-   connection.connect()
-   connection.sendFile(filePath)
-   print "file " + filePath + " sent"
+
 
 ## Create two threads as follows
 #try:
