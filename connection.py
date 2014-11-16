@@ -164,7 +164,9 @@ if __name__ == '__main__':
         connect = maConnection.connect()
        # print connect.retrlines('LIST')
         connect.cwd(sys.argv[5])
-        #createTree(sys.argv[4])
+        createTree(sys.argv[4])
+        connect.cwd("/" + sys.argv[5])
+        print "\n --------VERIFICATION DE LA SUPPRESSION DE FICHIERS--------"
         checkForDeletedThings(sys.argv[4],  "/"+sys.argv[5])
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
