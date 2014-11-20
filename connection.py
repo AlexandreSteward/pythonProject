@@ -85,7 +85,7 @@ def getServerPath(path):##permet dobtenir le path du server correspondant au pat
     return sys.argv[5] + (path.split(sys.argv[5].split("/")[-1])[-1]).replace("\\", "/")
 
     
-  
+
 def checkForDeletedThings(currentLocalFolder,  currentServerPath):##verifie si un fichier local a ete supprime ou non localement et modifie le FTP en consequence 
 
     files = []
@@ -93,20 +93,20 @@ def checkForDeletedThings(currentLocalFolder,  currentServerPath):##verifie si u
 
     for file in files :
         if file != ".." and file != "." :
-            try:  ## Traitement si existe en repertoire
+            try:  ## Traitement cest un repertoire
                 connect.cwd(file)
-                checkForDeletedThings(setLocalPathToChild(currentLocalFolder,  file), setServerPathToChild(currentServerPath,  file)  )
-                if os.path.isdir(currentLocalFolder+"\\"+file) :
+                checkForDeletedThings(setLocalPathToChild(currentLocalFolder,  file), setServerPathToChild(currentServerPath,  file) )
+                if os.path.isdir(currentLocalFolder+"\\"+file) : ##si le dossier existe en local, on ne fait rien
                     logging.debug(" le dossier "+currentLocalFolder+"\\"+ file + " est present localement")
-                else :
+                else : ##si il nexiste pas on le supprime sur le serveur
                     connect.rmd(file)
                     logging.info(" dossier " + file + " supprime")
                 
-            except:## Traitement si n'existe pas
-                if os.path.isfile(currentLocalFolder+"\\"+file)== False :
+            except:## Traitement si cest un fichier
+                if os.path.isfile(currentLocalFolder+"\\"+file)== False : ## si le fichier nexiste pas localement on le supprime sur le serveur
                     connect.delete(file)
                     logging.info(" fichier " + file + " supprime")
-                else:
+                else: ##si il existe localement, on ne fait rien
                     logging.debug(" le fichier "+currentLocalFolder+"\\"+ file + " est present localement")
                 
 
@@ -139,11 +139,11 @@ if __name__ == '__main__':
             logging.info(" le dossier de destination de la synchronisation " + sys.argv[5] + " est present le serveur")
         except :
             try:
-                connect.cwd(setServerPathToFather(sys.argv[5]))
-                connect.mkd(sys.argv[5])
+                connect.cwd(setServerPathToFather(sys.argv[5]))## si il nexiste pas, on se connecte au repertoire dans lequel il est contenu
+                connect.mkd(sys.argv[5])##on cree le dossier au bon endroit
                 logging.info(" creation du dossier de synchronisation " + sys.argv[5] + " sur le serveur")
             except:
-                logging.error(" l\'arborescence " + sys.argv[5] + " n\'existe pas"  )
+                logging.error(" l\'arborescence " + sys.argv[5] + " n\'existe pas"  ) ##si le chemin specifie nexiste pas, on arrete le programme
                 sys.exit(0)
                 
             
@@ -155,4 +155,4 @@ if __name__ == '__main__':
     else :
         logging.info( " le dossier a synchronise " + sys.argv[4] + " n\'existe pas, operation annulee")
     
-    print "\n --------Synchronisation termine--------"
+    print "\n --------SYNCHRONISATION TERMINEE--------"
