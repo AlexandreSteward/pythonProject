@@ -75,7 +75,7 @@ def doesDirectoryExistsOnServer(dir):
 
 def isAscii(s):
     for c in s:
-        if c not in string.ascii_letters and c != " ":
+        if c not in string.ascii_letters and c not in string.punctuation and c not in string.digits and c not in string.whitespace:
             return False
     return True
     
