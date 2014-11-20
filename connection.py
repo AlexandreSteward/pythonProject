@@ -1,14 +1,9 @@
 import ftplib
-import thread
-import time
 import sys
 import os
 import string
 import logging
 from datetime import datetime
-
-
-
 
 class Ftp:
     def __init__(self, host,  account,  password):
@@ -16,101 +11,89 @@ class Ftp:
         self.account = account
         self.password = password
 
-    def connect(self):
+    def connect(self):## permet la connexion au serveur ftp
         return ftplib.FTP(self.host,  self.account,  self.password)
 
-def getLastTimeFileOnServer(serverPath):
+def getLastTimeFileOnServer(serverPath):##recupere la date de derniere modification du fichier enregistrer sur le serveur au format aaaaMMjjhhmmss
     return connect.sendcmd("MDTM "+"/" + serverPath.replace("\\", "/")).split(" ")[-1]
 
-def getLastTimeFileOnLocal(localPath):
+def getLastTimeFileOnLocal(localPath):##recupere la date de derniere modification du fichier enregistrer en local aaaaMMjjhhmmss
     return datetime.utcfromtimestamp(os.path.getmtime(localPath)).isoformat(" ").replace("-", "").replace(":",  "").replace(" ",  "").split(".")[0]
-    
-def getFileServerPermission(serverPath):
-    return 0
 
-#verifie si un fichier est present sur le serveur, si il nexiste pas ou qui le fichier sur le serveur nest pas a jour, le programme le cree ou le remplace par la derniere version
+
+##verifie si un fichier est present sur le serveur, si il nexiste pas ou qui le fichier sur le serveur nest pas a jour, le programme le cree ou le remplace par la derniere version
 def doesFileExistsOnServer(file, serverPath,  localPath):
-    try:   
-        ## Traitement si existe en fichier
-        if connect.size(serverPath) != os.path.getsize(localPath) :
+    try:  ## Traitement si existe en fichier 
+        if connect.size(serverPath) != os.path.getsize(localPath) : ##lance exception si ce n'est pas un fichier
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             logging.info(" le fichier " + localPath + " a ete mis a jour (taille du fichier)")
-            
+        
         if getLastTimeFileOnLocal(localPath) > getLastTimeFileOnServer(serverPath) :
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             logging.info(" le fichier " + localPath + " a ete mis a jour (date derniere modification)")
            
-    except: 
-        ## Traitement si existe en repertoire ou n'existe pas
-        try:  
-            ## Traitement si existe en repertoire
-            connect.cwd(serverPath)
+    except: ## Traitement si existe en repertoire ou n'existe pas
+        try:  ## Traitement si existe en repertoire
+            connect.cwd(serverPath)##lance une exception si ce n'est pas un dossier (ici, signifie que le fichier n'existe pas)
             connect.cwd("..")
-        except:
-            ## Traitement si le fichier n'existe pas
+        except:## Traitement si le fichier n'existe pas
             connect.cwd( serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
-            connect.storbinary('STOR '+file, open( localPath , 'rb'))
+            connect.storbinary('STOR '+file, open( localPath , 'rb'))##on cree le fichier sur le ftp
             logging.info(" le fichier " + localPath + " a ete cree")
 
-#verifie si un dossier existe sur le dossier courant du serveur, si il nexiste pas, on le cree
+##verifie si un dossier existe sur le dossier courant du serveur, si il nexiste pas, on le cree
 def doesDirectoryExistsOnServer(dir):
-        try:  
-            ## Traitement si existe en repertoire
-            connect.cwd(dir) 
+        try:  ## Traitement si existe en repertoire
+            connect.cwd(dir) ##lance une exeption si ce n'est pas un dossier (ici, signifie que le dossier n'existe pas)
             
-        except:
-            ## Traitement si n'existe pas
-            #on accede au dossier parent
-            connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))
-            print connect.pwd()
-            #on cree le nouveau dossier
-            connect.mkd(dir.split("/")[-1])
+        except:## Traitement si n'existe pas
+            connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))##on accede au dossier parent
+            connect.mkd(dir.split("/")[-1]) ##on cree le nouveau dossier
             logging.info(" creation du dossier " + dir.split("/")[-1])
             
 
-def isAscii(s):
+def isAscii(s):## verifie si une chaine est uniquement compose de caracteres ASCII
     for c in s:
         if c not in string.ascii_letters and c not in string.punctuation and c not in string.digits and c not in string.whitespace:
             return False
     return True
     
-#permet lajout de fichiers et leurs mise a jour
-def createTree(path):
+##permet l ajout de fichiers et leurs mise a jour
+def browseLocalFolder(path):
 
-    for file in os.listdir(path) :
+    for file in os.listdir(path) : ##liste les dossiers et fichiers present dans le dossier courant
         if isAscii(file) == False:
-            logging.error("\n nom de fichier ou dossier invalide, le programme va s'arreter")
-            sys.exit(0) 
+            logging.error("\n nom de fichier ou dossier invalide ("+file+") , le programme va s'arreter")
+            sys.exit(0) ## si un nom contient des caracteres non-ASCII on arrete le programme
         
         tempDir = setLocalPathToChild(path,  file)
 
-        if os.path.isdir(tempDir) :
+        if os.path.isdir(tempDir) : ## si c'est un dossier
             serverDirPath =getServerPath(tempDir)
-            doesDirectoryExistsOnServer(serverDirPath)
-            createTree(tempDir)
+            doesDirectoryExistsOnServer(serverDirPath) ## on verifie l existence de ce dossier sur le serveur
+            browseLocalFolder(tempDir) ##on relance la recherche dans ce dossier
         else :
             serverDirPath =getServerPath(path)
             serverFilePath = getServerPath(tempDir)
             #doesDirectoryExistsOnServer(serverDirPath)
-            doesFileExistsOnServer(file, serverFilePath,  tempDir)
+            doesFileExistsOnServer(file, serverFilePath,  tempDir) ## on verifie l existence de ce fichier sur le serveur
 
-#permet dobtenir le path du server correspondant au path local
-def getServerPath(path):
+
+def getServerPath(path):##permet dobtenir le path du server correspondant au path local
     return  (sys.argv[5] +path.split(sys.argv[5].rsplit("/")[-1])[-1]).replace("\\", "/")
 
     
- #verifie si un fichier local a ete supprime ou non, localement et modifie le FTP en consequence   
-def checkForDeletedThings(currentLocalFolder,  currentServerPath):
+  
+def checkForDeletedThings(currentLocalFolder,  currentServerPath):##verifie si un fichier local a ete supprime ou non localement et modifie le FTP en consequence 
 
     files = []
     connect.retrlines("NLST",files.append)
 
     for file in files :
         if file != ".." and file != "." :
-            try:  
-            ## Traitement si existe en repertoire
+            try:  ## Traitement si existe en repertoire
                 connect.cwd(file)
                 checkForDeletedThings(setLocalPathToChild(currentLocalFolder,  file), setServerPathToChild(currentServerPath,  file)  )
                 if os.path.isdir(currentLocalFolder+"\\"+file) :
@@ -119,25 +102,25 @@ def checkForDeletedThings(currentLocalFolder,  currentServerPath):
                     connect.rmd(file)
                     logging.info(" dossier " + file + " supprime")
                 
-            except:
+            except:## Traitement si n'existe pas
                 if os.path.isfile(currentLocalFolder+"\\"+file)== False :
                     connect.delete(file)
                     logging.info(" fichier " + file + " supprime")
                 else:
                     logging.debug(" le fichier "+currentLocalFolder+"\\"+ file + " est present localement")
-                ## Traitement si n'existe pas
+                
 
-    #on accede au dossier parent            
+    ##on accede au dossier parent            
     connect.cwd("..")
             
-#permet de concatener le Serverpath actuel avec un sous dossier quil contient
+##permet de concatener le Serverpath actuel avec un sous dossier quil contient
 def setServerPathToChild(currentServerPath,  child):
     return currentServerPath + "/" + child
     
-#permet de concatener le path actuel avec un sous dossier quil contient
+##permet de concatener le path actuel avec un sous dossier quil contient
 def setLocalPathToChild(currentPath,  child):
     return currentPath +"\\" + child
-
+ 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -150,21 +133,18 @@ if __name__ == '__main__':
         
         
         try :
-            connect.cwd(sys.argv[5])
+            connect.cwd(sys.argv[5]) ##on verifie si le dossier a synchroniser existe sur le ftp
             logging.info(" le dossier de destination de la synchronisation " + sys.argv[5] + " est present le serveur")
         except :
             connect.mkd(sys.argv[5])
             logging.info(" creation du dossier de synchronisation " + sys.argv[5] + " sur le serveur")
             
         print "\n --------CREATION ET MISE A JOUR DES FICHIERS ET DOSSIERS--------"
-        createTree(sys.argv[4])
-        connect.cwd(sys.argv[5])
+        browseLocalFolder(sys.argv[4]) ## parcours du dossier local
+        connect.cwd(sys.argv[5]) ##on revient au dossier principal sur le serveur
         print "\n --------VERIFICATION DE LA SUPPRESSION DE FICHIERS--------"
-        checkForDeletedThings(sys.argv[4],  sys.argv[5])
+        checkForDeletedThings(sys.argv[4],  sys.argv[5]) ## parcours du dossier distant pour supprimer les fichiers qui n'existent plus en local
     else :
         logging.info( " le dossier a synchronise " + sys.argv[4] + " n\'existe pas, operation annulee")
     
-    print "\n --------FIN--------"
-    
-
-    
+    print "\n --------Synchronisation termine--------"
