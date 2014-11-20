@@ -127,15 +127,17 @@ if __name__ == '__main__':
    
     print "\n -----DEBUT-----"
     if os.path.isdir(sys.argv[4]) : 
-        print " le repertoire : >> " + sys.argv[4] + " << EXISTE"
+        logging.info( " le dossier a synchronise " + sys.argv[4] + " est present localement")
         maConnection = Ftp(sys.argv[1],  sys.argv[2], sys.argv[3] )
         connect = maConnection.connect()
         
         
         try :
             connect.cwd(sys.argv[5]) ##on verifie si le dossier a synchroniser existe sur le ftp
+            logging.info(" le dossier de destination de la synchronisation " + sys.argv[5] + " est present le serveur")
         except :
-            mkdir(sys.argv[5]) ## sinon on le cree
+            connect.mkd(sys.argv[5])
+            logging.info(" creation du dossier de synchronisation " + sys.argv[5] + " sur le serveur")
             
         print "\n --------CREATION ET MISE A JOUR DES FICHIERS ET DOSSIERS--------"
         browseLocalFolder(sys.argv[4]) ## parcours du dossier local
@@ -143,6 +145,6 @@ if __name__ == '__main__':
         print "\n --------VERIFICATION DE LA SUPPRESSION DE FICHIERS--------"
         checkForDeletedThings(sys.argv[4],  sys.argv[5]) ## parcours du dossier distant pour supprimer les fichiers qui n'existent plus en local
     else :
-        print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
+        logging.info( " le dossier a synchronise " + sys.argv[4] + " n\'existe pas, operation annulee")
     
     print "\n --------Synchronisation termine--------"
