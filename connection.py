@@ -77,7 +77,7 @@ def browseLocalFolder(path):
         else :
             serverDirPath =getServerPath(path)
             serverFilePath = getServerPath(tempDir)
-            doesDirectoryExistsOnServer(serverDirPath)
+            #doesDirectoryExistsOnServer(serverDirPath)
             doesFileExistsOnServer(file, serverFilePath,  tempDir) ## on verifie l existence de ce fichier sur le serveur
 
 
