@@ -5,6 +5,7 @@ import Queue
 import sys
 import os
 import string
+import logging
 from datetime import datetime
 
 class Ftp:
@@ -32,12 +33,12 @@ def doesFileExistsOnServer(file, serverPath,  localPath):
         if connect.size(serverPath) != os.path.getsize(localPath) :
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
-            print "le fichier " + localPath + " a ete mis a jour (taille du fichier)"
+            logging.info(" le fichier " + localPath + " a ete mis a jour (taille du fichier)")
             
         if getLastTimeFileOnLocal(localPath) > getLastTimeFileOnServer(serverPath) :
             connect.cwd(serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
-            print "le fichier " + localPath + " a ete mis a jour (date derniere modification)"
+            logging.info(" le fichier " + localPath + " a ete mis a jour (date derniere modification)")
            
     except: 
         ## Traitement si existe en repertoire ou n'existe pas
@@ -49,7 +50,7 @@ def doesFileExistsOnServer(file, serverPath,  localPath):
             ## Traitement si le fichier n'existe pas
             connect.cwd( serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
-            print "le fichier " + localPath + " a ete cree"
+            logging.info(" le fichier " + localPath + " a ete cree")
 
 #verifie si un dossier existe sur le dossier courant du serveur, si il nexiste pas, on le cree
 def doesDirectoryExistsOnServer(dir):
@@ -64,7 +65,8 @@ def doesDirectoryExistsOnServer(dir):
             print connect.pwd()
             #on cree le nouveau dossier
             connect.mkd(dir.split("/")[-1])
-            print "creation du dossier " + dir.split("/")[-1]
+            logging.info(" creation du dossier " + dir.split("/")[-1])
+            
 
 def isAscii(s):
     for c in s:
@@ -74,18 +76,15 @@ def isAscii(s):
     
 #permet lajout de fichiers et leurs mise a jour
 def createTree(path):
-    
-    print os.listdir(path)
+
     for file in os.listdir(path) :
         if isAscii(file) == False:
-            print "\n nom de fichier ou dossier invalide, le programme va s'arreter"
+            logging.error("\n nom de fichier ou dossier invalide, le programme va s'arreter")
             sys.exit(0) 
         
         tempDir = setLocalPathToChild(path,  file)
 
         if os.path.isdir(tempDir) :
-            print "\n ------DOSSIER " + path + "------" 
-
             serverDirPath =getServerPath(tempDir)
             doesDirectoryExistsOnServer(serverDirPath)
             createTree(tempDir)
@@ -113,16 +112,17 @@ def checkForDeletedThings(currentLocalFolder,  currentServerPath):
                 connect.cwd(file)
                 checkForDeletedThings(setLocalPathToChild(currentLocalFolder,  file), setServerPathToChild(currentServerPath,  file)  )
                 if os.path.isdir(currentLocalFolder+"\\"+file) :
-                    print currentLocalFolder+"\\"+ file + " est present localement"
+                    logging.debug(" le dossier "+currentLocalFolder+"\\"+ file + " est present localement")
                 else :
-                    print "suppression du dossier " + file
                     connect.rmd(file)
-                    print "dossier " + file + " supprime"
+                    logging.info(" dossier " + file + " supprime")
                 
             except:
                 if os.path.isfile(currentLocalFolder+"\\"+file)== False :
                     connect.delete(file)
-                    print "fichier " + file + " supprime"
+                    logging.info(" fichier " + file + " supprime")
+                else:
+                    logging.debug(" le fichier "+currentLocalFolder+"\\"+ file + " est present localement")
                 ## Traitement si n'existe pas
 
     #on accede au dossier parent            
@@ -146,14 +146,8 @@ def setLocalPathToChild(currentPath,  child):
 
 
 if __name__ == '__main__':
-    
-    print "\n------TESTS------"
-    
-    print "getServerPath : " + getServerPath("C:\Users\ISEN\Google Drive\python\lalala\llflfzeazef")
-    print "getServerPath : " +  getServerPath("C:\Users\ISEN\Google Drive\python\lalala\\")
-    print "setServerPathToChild : " + setServerPathToChild("/python/lilaloum/pim/pam", "poum")
-    print "setLocalPathToChild : " + setLocalPathToChild("C:\Users\ISEN\Google Drive\python", "lalala")
-    
+    logging.basicConfig(level=logging.DEBUG)
+   
     print "\n -----DEBUT-----"
     if os.path.isdir(sys.argv[4]) : 
         print " le repertoire : >> " + sys.argv[4] + " << EXISTE"
