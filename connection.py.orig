@@ -1,13 +1,22 @@
+#!/usr/bin/python
+# -*- coding: Utf-8 -*-
 import ftplib
 import thread
 import time
 import Queue
 import sys
 import os
+<<<<<<< HEAD
+import codecs
+=======
+import string
+>>>>>>> b5ac1e32584cfcede16deb2cf6117ac40c8f5ead
 from datetime import datetime
 
+
+
+
 class Ftp:
-    #lala
     def __init__(self, host,  account,  password):
         self.host = host
         self.account = account
@@ -25,6 +34,7 @@ def getLastTimeFileOnLocal(localPath):
 def getFileServerPermission(serverPath):
     return 0
 
+#verifie si un fichier est present sur le serveur, si il nexiste pas ou qui le fichier sur le serveur nest pas a jour, le programme le cree ou le remplace par la derniere version
 def doesFileExistsOnServer(file, serverPath,  localPath):
     try:   
         ## Traitement si existe en fichier
@@ -46,22 +56,18 @@ def doesFileExistsOnServer(file, serverPath,  localPath):
             connect.cwd("..")
         except:
             ## Traitement si le fichier n'existe pas
-            #print  "acces au dossier " + serverPath.replace("/" + serverPath.split("/")[-1],  "/")
-           # print "acces au dossier" + serverPath
             connect.cwd( serverPath.replace("/" + serverPath.split("/")[-1],  "/")) 
             connect.storbinary('STOR '+file, open( localPath , 'rb'))
             print "le fichier " + localPath + " a ete cree"
 
+#verifie si un dossier existe sur le dossier courant du serveur, si il nexiste pas, on le cree
 def doesDirectoryExistsOnServer(dir):
         try:  
             ## Traitement si existe en repertoire
             connect.cwd(dir) 
-            #print "acces au repertoire FTP " + dir
-           # print connect.pwd()
             
         except:
             ## Traitement si n'existe pas
-
             #on accede au dossier parent
             connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))
             print connect.pwd()
@@ -69,14 +75,22 @@ def doesDirectoryExistsOnServer(dir):
             connect.mkd(dir.split("/")[-1])
             print "creation du dossier " + dir.split("/")[-1]
 
-           
-           
+def isAscii(s):
+    for c in s:
+        if c not in string.ascii_letters and c != " ":
+            return False
+    return True
+    
+#permet lajout de fichiers et leurs mise a jour
 def createTree(path):
-
-#  doesFileExistsOnServer(connect.cwd(sys.argv[5])[0])  
+    
     print os.listdir(path)
     for file in os.listdir(path) :
-        tempDir = getLocalFullPath(path,  file)
+        if isAscii(file) == False:
+            print "\n nom de fichier ou dossier invalide, le programme va s'arreter"
+            sys.exit(0) 
+        
+        tempDir = setLocalPathToChild(path,  file)
 
         if os.path.isdir(tempDir) :
             print "\n ------DOSSIER " + path + "------" 
@@ -90,22 +104,16 @@ def createTree(path):
             doesDirectoryExistsOnServer(serverDirPath)
             doesFileExistsOnServer(file, serverFilePath,  tempDir)
 
-
+#permet dobtenir le path du server correspondant au path local
 def getServerPath(path):
-    return  "/"+ (sys.argv[5] +path.split(sys.argv[5])[-1]).replace("\\", "/")
+    return  (sys.argv[5] +path.split(sys.argv[5].rsplit("/")[-1])[-1]).replace("\\", "/")
 
-def concatPath(currentPath,  file):
-    return "/" + currentPath + "/" + file
-
-def getLocalFullPath(path,  file):
-    return path + "\\" + file
     
+ #verifie si un fichier local a ete supprime ou non, localement et modifie le FTP en consequence   
 def checkForDeletedThings(currentLocalFolder,  currentServerPath):
 
     files = []
-    content = connect.retrlines("NLST",files.append)
-#    print connect.nlst();
-        
+    connect.retrlines("NLST",files.append)
 
     for file in files :
         if file != ".." and file != "." :
@@ -116,60 +124,69 @@ def checkForDeletedThings(currentLocalFolder,  currentServerPath):
                 if os.path.isdir(currentLocalFolder+"\\"+file) :
                     print currentLocalFolder+"\\"+ file + " est present localement"
                 else :
-                    #print"deleting" +  currentPath + "/" + file
                     print "suppression du dossier " + file
                     connect.rmd(file)
                     print "dossier " + file + " supprime"
-                    #deleteFolderContent(file)
                 
             except:
                 if os.path.isfile(currentLocalFolder+"\\"+file)== False :
                     connect.delete(file)
                     print "fichier " + file + " supprime"
                 ## Traitement si n'existe pas
-            #on accede au dossier parent
-            # connect.cwd(dir.replace( "/" + dir.split("/")[-1],  ""))
-            
+
+    #on accede au dossier parent            
     connect.cwd("..")
             
-
+#permet de concatener le Serverpath actuel avec un sous dossier quil contient
 def setServerPathToChild(currentServerPath,  child):
     return currentServerPath + "/" + child
-
-def setServerPathToFather(currentServerPath):
-    return currentPath.rstrip("/" + currentPath.split("/")[-1])
-
-def setLocalPathToFather(currentPath):
-    return currentPath.rstrip("\\" + currentPath.split("\\")[-1])
     
+#permet de concatener le path actuel avec un sous dossier quil contient
 def setLocalPathToChild(currentPath,  child):
     return currentPath +"\\" + child
 
-
-    
-def deleteFile(fileName):
-    element = raw_input(fileName) # vous indiquez dans la console le fichier, ex. : fichier.py
-    delete = connect.delete(element) ## cest la fonction en elle-meme
-    
+#def setServerPathToFather(currentServerPath):
+#    return currentPath.rstrip("/" + currentPath.split("/")[-1])
+#
+#def setLocalPathToFather(currentPath):
+#    return currentPath.rstrip("\\" + currentPath.split("\\")[-1])
+ 
 
 
 
 if __name__ == '__main__':
     
+    print "\n------TESTS------"
+    
+    print "getServerPath : " + getServerPath("C:\Users\ISEN\Google Drive\python\lalala\llflfzeazef")
+    print "getServerPath : " +  getServerPath("C:\Users\ISEN\Google Drive\python\lalala\\")
+    print "setServerPathToChild : " + setServerPathToChild("/python/lilaloum/pim/pam", "poum")
+    print "setLocalPathToChild : " + setLocalPathToChild("C:\Users\ISEN\Google Drive\python", "lalala")
+    
+    print "\n -----DEBUT-----"
     if os.path.isdir(sys.argv[4]) : 
-        print "le repertoire : " + sys.argv[4] + " existe"
+        print " le repertoire : >> " + sys.argv[4] + " << EXISTE"
         maConnection = Ftp(sys.argv[1],  sys.argv[2], sys.argv[3] )
-        
-        
         connect = maConnection.connect()
-       # print connect.retrlines('LIST')
-        connect.cwd(sys.argv[5])
+        
+        
+        try :
+            connect.cwd(sys.argv[5])
+        except :
+            mkdir(sys.argv[5])
+            
+        print "\n --------CREATION ET MISE A JOUR DES FICHIERS ET DOSSIERS--------"
         createTree(sys.argv[4])
-        connect.cwd("/" + sys.argv[5])
+        connect.cwd(sys.argv[5])
         print "\n --------VERIFICATION DE LA SUPPRESSION DE FICHIERS--------"
-        checkForDeletedThings(sys.argv[4],  "/"+sys.argv[5])
+        checkForDeletedThings(sys.argv[4],  sys.argv[5])
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
+    
+    print "\n --------FIN--------"
+    
+
+    
 
 
 

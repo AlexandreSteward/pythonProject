@@ -1,9 +1,6 @@
-#!/usr/bin/python
-# -*- coding: Utf-8 -*-
 import ftplib
 import thread
 import time
-import Queue
 import sys
 import os
 import string
@@ -141,29 +138,23 @@ def setServerPathToChild(currentServerPath,  child):
 def setLocalPathToChild(currentPath,  child):
     return currentPath +"\\" + child
 
-#def setServerPathToFather(currentServerPath):
-#    return currentPath.rstrip("/" + currentPath.split("/")[-1])
-#
-#def setLocalPathToFather(currentPath):
-#    return currentPath.rstrip("\\" + currentPath.split("\\")[-1])
- 
-
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
    
     print "\n -----DEBUT-----"
     if os.path.isdir(sys.argv[4]) : 
-        print " le repertoire : >> " + sys.argv[4] + " << EXISTE"
+        logging.info( " le dossier a synchronise " + sys.argv[4] + " est present localement")
         maConnection = Ftp(sys.argv[1],  sys.argv[2], sys.argv[3] )
         connect = maConnection.connect()
         
         
         try :
             connect.cwd(sys.argv[5])
+            logging.info(" le dossier de destination de la synchronisation " + sys.argv[5] + " est present le serveur")
         except :
-            mkdir(sys.argv[5])
+            connect.mkd(sys.argv[5])
+            logging.info(" creation du dossier de synchronisation " + sys.argv[5] + " sur le serveur")
             
         print "\n --------CREATION ET MISE A JOUR DES FICHIERS ET DOSSIERS--------"
         createTree(sys.argv[4])
@@ -171,24 +162,9 @@ if __name__ == '__main__':
         print "\n --------VERIFICATION DE LA SUPPRESSION DE FICHIERS--------"
         checkForDeletedThings(sys.argv[4],  sys.argv[5])
     else :
-        print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
+        logging.info( " le dossier a synchronise " + sys.argv[4] + " n\'existe pas, operation annulee")
     
     print "\n --------FIN--------"
     
 
     
-
-
-
-
-
-## Create two threads as follows
-#try:
-#    thread.start_new_thread(envoiFichierSurFtp,  (maConnection,  "C:\Users\ISEN\Desktop\pompozob.txt" ) )
-##    thread.start_new_thread( print_time, ("Thread-1", 2, ) )
-##    thread.start_new_thread( print_time, ("Thread-2", 4 ) )
-#except:
-#   print "Error: unable to start thread"
-#
-#while 1:
-#   pass
