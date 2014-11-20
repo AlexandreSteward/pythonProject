@@ -93,7 +93,7 @@ def createTree(path):
         else :
             serverDirPath =getServerPath(path)
             serverFilePath = getServerPath(tempDir)
-            doesDirectoryExistsOnServer(serverDirPath)
+            #doesDirectoryExistsOnServer(serverDirPath)
             doesFileExistsOnServer(file, serverFilePath,  tempDir)
 
 #permet dobtenir le path du server correspondant au path local
