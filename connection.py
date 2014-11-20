@@ -121,6 +121,8 @@ def setServerPathToChild(currentServerPath,  child):
 def setLocalPathToChild(currentPath,  child):
     return currentPath +"\\" + child
  
+def setServerPathToFather(currentServerPath):
+    return currentPath.rstrip("/" + currentPath.split("/")[-1])
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
