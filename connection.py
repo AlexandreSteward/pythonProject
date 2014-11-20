@@ -65,7 +65,7 @@ def browseLocalFolder(path):
 
     for file in os.listdir(path) : ##liste les dossiers et fichiers present dans le dossier courant
         if isAscii(file) == False:
-            logging.error("\n nom de fichier ou dossier invalide ("+file+") , le programme va s'arreter")
+            logging.error("\n nom de fichier ou dossier invalide ( "+file+" ) , le programme va s'arreter")
             sys.exit(0) ## si un nom contient des caracteres non-ASCII on arrete le programme
         
         tempDir = setLocalPathToChild(path,  file)
