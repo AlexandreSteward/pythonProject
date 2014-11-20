@@ -1,10 +1,16 @@
+#!/usr/bin/python
+# -*- coding: Utf-8 -*-
 import ftplib
 import thread
 import time
 import Queue
 import sys
 import os
+import codecs
 from datetime import datetime
+
+
+
 
 class Ftp:
     def __init__(self, host,  account,  password):
@@ -149,12 +155,18 @@ if __name__ == '__main__':
         print " le repertoire : >> " + sys.argv[4] + " << EXISTE"
         maConnection = Ftp(sys.argv[1],  sys.argv[2], sys.argv[3] )
         connect = maConnection.connect()
-        connect.cwd(sys.argv[5])
+        
+        
+        try :
+            connect.cwd(sys.argv[5])
+        except :
+            mkdir(sys.argv[5])
+            
         print "\n --------CREATION ET MISE A JOUR DES FICHIERS ET DOSSIERS--------"
         createTree(sys.argv[4])
         connect.cwd(sys.argv[5])
         print "\n --------VERIFICATION DE LA SUPPRESSION DE FICHIERS--------"
-        checkForDeletedThings(sys.argv[4],  "/"+sys.argv[5])
+        checkForDeletedThings(sys.argv[4],  sys.argv[5])
     else :
         print "le repertoire : " + sys.argv[4] + " n\'existe pas, operation annulee"
     
