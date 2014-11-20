@@ -6,7 +6,7 @@ import time
 import Queue
 import sys
 import os
-import codecs
+import string
 from datetime import datetime
 
 
@@ -71,12 +71,21 @@ def doesDirectoryExistsOnServer(dir):
             connect.mkd(dir.split("/")[-1])
             print "creation du dossier " + dir.split("/")[-1]
 
-           
+def isAscii(s):
+    for c in s:
+        if c not in string.ascii_letters and c != " ":
+            return False
+    return True
+    
 #permet lajout de fichiers et leurs mise a jour
 def createTree(path):
     
     print os.listdir(path)
     for file in os.listdir(path) :
+        if isAscii(file) == False:
+            print "\n nom de fichier ou dossier invalide, le programme va s'arreter"
+            sys.exit(0) 
+        
         tempDir = setLocalPathToChild(path,  file)
 
         if os.path.isdir(tempDir) :
@@ -100,7 +109,7 @@ def getServerPath(path):
 def checkForDeletedThings(currentLocalFolder,  currentServerPath):
 
     files = []
-    content = connect.retrlines("NLST",files.append)
+    connect.retrlines("NLST",files.append)
 
     for file in files :
         if file != ".." and file != "." :
