@@ -1,9 +1,4 @@
 import ftplib
-<<<<<<< HEAD
-=======
-import thread
-import time
->>>>>>> b01df9d31f869fdacae19d45a18a19b18b160161
 import sys
 import os
 import string
@@ -82,9 +77,14 @@ def browseLocalFolder(path):
         else :
             serverDirPath =getServerPath(path)
             serverFilePath = getServerPath(tempDir)
+<<<<<<< HEAD
+            #doesDirectoryExistsOnServer(serverDirPath)
+            doesFileExistsOnServer(file, serverFilePath,  tempDir)
+=======
             doesDirectoryExistsOnServer(serverDirPath)
             doesFileExistsOnServer(file, serverFilePath,  tempDir) ## on verifie l existence de ce fichier sur le serveur
 
+>>>>>>> 65b1ead2b8a837a5b6520a15847c629b76d287c0
 
 def getServerPath(path):##permet dobtenir le path du server correspondant au path local
     return  (sys.argv[5] +path.split(sys.argv[5].rsplit("/")[-1])[-1]).replace("\\", "/")
@@ -125,11 +125,7 @@ def setServerPathToChild(currentServerPath,  child):
 ##permet de concatener le path actuel avec un sous dossier quil contient
 def setLocalPathToChild(currentPath,  child):
     return currentPath +"\\" + child
-<<<<<<< HEAD
  
-=======
-
->>>>>>> b01df9d31f869fdacae19d45a18a19b18b160161
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -142,17 +138,11 @@ if __name__ == '__main__':
         
         
         try :
-<<<<<<< HEAD
             connect.cwd(sys.argv[5]) ##on verifie si le dossier a synchroniser existe sur le ftp
-        except :
-            mkdir(sys.argv[5]) ## sinon on le cree
-=======
-            connect.cwd(sys.argv[5])
             logging.info(" le dossier de destination de la synchronisation " + sys.argv[5] + " est present le serveur")
         except :
             connect.mkd(sys.argv[5])
             logging.info(" creation du dossier de synchronisation " + sys.argv[5] + " sur le serveur")
->>>>>>> b01df9d31f869fdacae19d45a18a19b18b160161
             
         print "\n --------CREATION ET MISE A JOUR DES FICHIERS ET DOSSIERS--------"
         browseLocalFolder(sys.argv[4]) ## parcours du dossier local
@@ -162,11 +152,4 @@ if __name__ == '__main__':
     else :
         logging.info( " le dossier a synchronise " + sys.argv[4] + " n\'existe pas, operation annulee")
     
-<<<<<<< HEAD
     print "\n --------Synchronisation termine--------"
-=======
-    print "\n --------FIN--------"
-    
-
-    
->>>>>>> b01df9d31f869fdacae19d45a18a19b18b160161

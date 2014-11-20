@@ -82,7 +82,7 @@ def browseLocalFolder(path):
 
 
 def getServerPath(path):##permet dobtenir le path du server correspondant au path local
-    return  (sys.argv[5] +path.split(sys.argv[5].rsplit("/")[-1])[-1]).replace("\\", "/")
+    return sys.argv[5] + (path.split(sys.argv[5].split("/")[-1])[-1]).replace("\\", "/")
 
     
   
@@ -121,8 +121,8 @@ def setServerPathToChild(currentServerPath,  child):
 def setLocalPathToChild(currentPath,  child):
     return currentPath +"\\" + child
  
-def setServerPathToFather(currentServerPath):
-    return currentPath.rstrip("/" + currentPath.split("/")[-1])
+def setServerPathToFather(currentPath):
+    return  currentPath.split("/" + currentPath.split("/")[-1])[0]
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -138,8 +138,14 @@ if __name__ == '__main__':
             connect.cwd(sys.argv[5]) ##on verifie si le dossier a synchroniser existe sur le ftp
             logging.info(" le dossier de destination de la synchronisation " + sys.argv[5] + " est present le serveur")
         except :
-            connect.mkd(sys.argv[5])
-            logging.info(" creation du dossier de synchronisation " + sys.argv[5] + " sur le serveur")
+            try:
+                connect.cwd(setServerPathToFather(sys.argv[5]))
+                connect.mkd(sys.argv[5])
+                logging.info(" creation du dossier de synchronisation " + sys.argv[5] + " sur le serveur")
+            except:
+                logging.error(" l\'arborescence " + sys.argv[5] + " n\'existe pas"  )
+                sys.exit(0)
+                
             
         print "\n --------CREATION ET MISE A JOUR DES FICHIERS ET DOSSIERS--------"
         browseLocalFolder(sys.argv[4]) ## parcours du dossier local
